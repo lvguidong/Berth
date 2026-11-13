@@ -89,7 +89,7 @@ function render() {
         (!windowFilter || pathKey(w.path) === windowFilter) &&
         matches(query, w.title, w.path),
     );
-    list.innerHTML = `<div class="toolbar">${windowFilter ? '<button class="button" data-clear-filter>全部窗口</button>' : "<span></span>"}<button class="button" data-merge ${windows.length < 2 ? "disabled" : ""}>合并重复窗口</button></div>${windows.map((w) => `<article class="pin-row" title="${e(w.path)}"><button class="open-pin" data-window="${e(w.id)}"><span class="folder-icon">${icon("window")}</span><span class="pin-info"><span class="pin-name">${e(w.title || folderName(w.path))}</span><span class="pin-path">${w.minimized ? "已最小化 · " : ""}${e(w.path)}</span></span></button><button class="icon-button" data-pin-window="${e(w.id)}" title="固定此目录" aria-label="固定 ${e(w.title)}">${icon(view.config.pins.some((p) => pathKey(p.path) === pathKey(w.path)) ? "check" : "plus")}</button></article>`).join("")}${!windows.length ? `<div class="empty"><div class="empty-art">${icon("window")}</div><h2>${query ? "没有匹配的窗口" : "此刻，桌面很清静"}</h2><p>打开的文件夹会出现在这里<br>随时切换，也可以一键固定</p></div>`       : ""}`;
+    list.innerHTML = `<div class="toolbar">${windowFilter ? '<button class="button" data-clear-filter>全部窗口</button>' : "<span></span>"}<button class="button" data-merge ${windows.length < 2 ? "disabled" : ""}>合并重复窗口</button></div>${windows.map((w) => `<article class="pin-row" title="${e(w.path)}"><button class="open-pin" data-window="${e(w.id)}"><span class="folder-icon">${icon("window")}</span><span class="pin-info"><span class="pin-name">${e(w.title || folderName(w.path))}</span><span class="pin-path">${w.minimized ? "已最小化 · " : ""}${e(w.path)}</span></span></button><button class="icon-button" data-pin-window="${e(w.id)}" title="固定此目录" aria-label="固定 ${e(w.title)}">${icon(view.config.pins.some((p) => pathKey(p.path) === pathKey(w.path)) ? "check" : "plus")}</button></article>`).join("")}${!windows.length ? `<div class="empty"><div class="empty-art">${icon("window")}</div><h2>${query ? "没有匹配的窗口" : "此刻，桌面很清静"}</h2><p>打开的文件夹会出现在这里<br>随时切换，也可以一键固定</p></div>` : ""}`;
     localize(list);
     return;
   }
@@ -361,9 +361,8 @@ async function openPin(id: string, force = false) {
   if (!pin) return;
   if (view.snapshot.available[id] === false) {
     editDialog(id);
-    dialog.querySelector(".error")!.textContent = tr(
-      "路径不可用，请重新定位或取消固定。",
-    );
+    dialog.querySelector(".error")!.textContent =
+      tr("路径不可用，请重新定位或取消固定。");
     return;
   }
   const row = document.querySelector<HTMLElement>(

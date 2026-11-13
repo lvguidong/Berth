@@ -15,7 +15,9 @@ describe("UI language", () => {
     expect(tr("已固定 3 个文件夹")).toBe("Pinned 3 folders");
     expect(tr("已合并 2 个重复窗口")).toBe("Merged 2 duplicate windows");
     expect(tr("拖动 我的项目")).toBe("Drag 我的项目");
-    expect(tr("无法读取配置：disk error")).toBe("Cannot read config: disk error");
+    expect(tr("无法读取配置：disk error")).toBe(
+      "Cannot read config: disk error",
+    );
     // Longer phrases must win over short words such as 设置 / 泊岸.
     expect(
       tr(

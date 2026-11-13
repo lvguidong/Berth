@@ -79,7 +79,7 @@ const DICT: Record<string, string> = {
   常用目录: "Frequent",
   没有找到这个文件夹: "No folder found",
   "试试目录名、别名或路径中的关键词": "Try a name, alias or path keyword",
-  "整理分组": "Edit group",
+  整理分组: "Edit group",
   关闭: "Close",
   // dialogs
   留一个位置: "Save a spot",
@@ -104,7 +104,8 @@ const DICT: Record<string, string> = {
   取消固定: "Unpin",
   保存: "Save",
   已复制路径: "Path copied",
-  "复制失败，请手动选择路径复制": "Copy failed; select and copy the path manually",
+  "复制失败，请手动选择路径复制":
+    "Copy failed; select and copy the path manually",
   "已取消固定 · 可按 Ctrl+Z 撤销": "Unpinned · Ctrl+Z to undo",
   请输入别名: "Please enter an alias",
   分组名称: "Group name",
@@ -141,12 +142,12 @@ const DICT: Record<string, string> = {
   "关闭面板后，可从托盘或快捷键再次呼出。":
     "After hiding, reopen it from the tray or shortcut.",
   收起到托盘: "Hide to tray",
-  "请在桌面应用中导出配置": "Export is only available in the desktop app",
+  请在桌面应用中导出配置: "Export is only available in the desktop app",
   配置已导出: "Config exported",
   "导入将替换当前固定项和设置，也会应用自启与快捷键。可以通过撤销恢复当前配置。":
     "Import replaces pins and settings, including startup and shortcuts. Undo restores the current config.",
   选择配置并导入: "Choose a config file",
-  "请在桌面应用中导入配置": "Import is only available in the desktop app",
+  请在桌面应用中导入配置: "Import is only available in the desktop app",
   "路径不可用，请重新定位或取消固定。":
     "Path unavailable. Relocate it or unpin the folder.",
   正在打开: "Opening",
@@ -158,14 +159,12 @@ const DICT: Record<string, string> = {
   // browser preview
   "网页预览：数据仅保存在本浏览器":
     "Browser preview: data is stored in this browser only",
-  "请在桌面应用中使用此功能":
-    "This feature is only available in the desktop app",
+  请在桌面应用中使用此功能: "This feature is only available in the desktop app",
   请输入完整的文件夹路径: "Please enter a full folder path",
   "这是网页预览，请在桌面应用中打开和切换文件夹":
     "This is a browser preview; open and switch folders in the desktop app",
   这个文件夹已经固定了: "This folder is already pinned",
-  "网页预览中请手动输入路径":
-    "In the browser preview, enter a path manually",
+  网页预览中请手动输入路径: "In the browser preview, enter a path manually",
   选择要固定的文件夹: "Choose a folder to pin",
   // backend messages surfaced in toast / warnings
   "配置刚刚发生变化，请重试": "Config changed, please retry",
@@ -177,7 +176,7 @@ const DICT: Record<string, string> = {
     "Path check timed out; network folders may be offline",
   "路径不可用：文件夹不存在、已离线或无访问权限":
     "Path unavailable: folder missing, offline, or inaccessible",
-  "路径包含无效字符": "Path contains invalid characters",
+  路径包含无效字符: "Path contains invalid characters",
   无法确定用户目录: "Cannot determine the home directory",
   "窗口服务忙，请稍后重试": "Window service is busy, please retry",
   "操作已超时，请重试": "Operation timed out, please retry",
@@ -185,22 +184,23 @@ const DICT: Record<string, string> = {
     "Window operation timed out; check network paths or permissions",
   "访达响应超时，请检查自动化权限或网络卷连接":
     "Finder timed out; check Automation permission or network volumes",
-  "无法确认已有窗口，未新开窗口：": "Could not confirm existing windows; no new window opened: ",
+  "无法确认已有窗口，未新开窗口：":
+    "Could not confirm existing windows; no new window opened: ",
   面板窗口不存在: "Panel window not found",
-  "不支持此配置版本": "Unsupported config version",
+  不支持此配置版本: "Unsupported config version",
   面板设置无效: "Invalid panel settings",
   配置项目数量过多: "Too many config items",
   分组无效或重复: "Invalid or duplicate group",
   "目录必须是绝对路径，且编号不能重复":
     "Folders must use absolute paths with unique IDs",
   配置包含重复目录: "Config contains duplicate folders",
-  "别名不能为空或过长": "Alias cannot be empty or too long",
+  别名不能为空或过长: "Alias cannot be empty or too long",
   "窗口已关闭，请重试": "Window closed, please retry",
   "窗口目录已变化，请重试": "Window folder changed, please retry",
   窗口已关闭: "Window closed",
-  "包含多个标签页的窗口不会自动关闭":
+  包含多个标签页的窗口不会自动关闭:
     "Windows with multiple tabs are not closed automatically",
-  "请先切换到一个资源管理器文件夹窗口":
+  请先切换到一个资源管理器文件夹窗口:
     "Switch to a File Explorer folder window first",
   "该窗口包含多个资源管理器标签页；请在窗口中选择对应标签，或按 Shift 点击新开独立窗口":
     "This window has multiple Explorer tabs; select the tab in the window, or Shift-click to open a separate window",
