@@ -472,11 +472,9 @@ pub fn run() {
             if let Err(e) = bind_hotkeys(app.handle(), &config.hotkeys) {
                 app.state::<AppState>().data.lock().unwrap().warning = Some(e);
             }
-            let (show_label, settings_label, quit_label, tooltip) =
-                tray_labels(&config.language);
+            let (show_label, settings_label, quit_label, tooltip) = tray_labels(&config.language);
             let show = MenuItem::with_id(app, "show", show_label, true, None::<&str>)?;
-            let settings =
-                MenuItem::with_id(app, "settings", settings_label, true, None::<&str>)?;
+            let settings = MenuItem::with_id(app, "settings", settings_label, true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
             let _ = TRAY_ITEMS.set(TrayItems {
                 show: show.clone(),
