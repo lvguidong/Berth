@@ -7,6 +7,10 @@ permissions:
   contents: write
 jobs:
   bundle:
+    # Releases are published from locally verified builds (see README).
+    # Keep CI packaging available on demand without creating competing drafts
+    # when a version tag is pushed for a published release.
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:

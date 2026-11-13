@@ -4,11 +4,18 @@
 
 泊岸是一个离线运行的轻量桌面文件夹侧栏。点击固定目录，有窗口就切换，没有就打开。使用 Tauri 2、Rust、TypeScript 与系统 WebView，面向 Windows 10/11 和 macOS 12+。
 
-[English](README.en.md) · [需求文档](泊岸（Berth）需求文档.md) · [验证说明](docs/TESTING.md) · [实现与限制](docs/IMPLEMENTATION.md)
+[English](README.en.md) · [下载 / Releases](https://github.com/lvguidong/Berth/releases) · [版本记录](CHANGELOG.md) · [需求文档](泊岸（Berth）需求文档.md) · [验证说明](docs/TESTING.md) · [实现与限制](docs/IMPLEMENTATION.md)
 
 <img src="docs/images/preview-light.png" width="280" alt="泊岸亮色界面预览"> <img src="docs/images/preview-dark.png" width="280" alt="泊岸暗色界面预览">
 
 [界面操作演示（WebM）](docs/images/demo.webm) — 图像与视频均为显式标注的网页预览；系统窗口行为由原生集成测试验证。
+
+## 下载 0.1.0
+
+- [GitHub Releases · v0.1.0](https://github.com/lvguidong/Berth/releases/tag/v0.1.0)：`Berth_0.1.0_aarch64.dmg`（macOS 12+，Apple Silicon，已在 Mac 实机编译并验证）。
+- 校验：Release 附带 `SHA256SUMS`，用 `shasum -a 256 -c SHA256SUMS` 核对。
+- 未签名、未公证。macOS 首次启动若被 Gatekeeper 拦截，右键 →「打开」，或在「隐私与安全性」中点「仍要打开」。
+- Windows 版本轮未发布安装包，可按下方「从源码运行」自行构建；需要 WebView2 Runtime。
 
 ## 使用
 
@@ -17,11 +24,13 @@
 3. 把文件夹拖入侧栏，或点击“固定文件夹”，输入路径或浏览选择。
 4. 点击目录切换；Shift+点击或中键强制新开。圆点表示已打开，数字表示多个窗口。
 
-默认在屏幕右侧，鼠标离开 800ms 后收成细线，靠近即展开。点击顶部图钉可固定展开。托盘图标左键显示/隐藏，右键可打开设置或退出。
+默认在屏幕右侧，鼠标离开 800ms 后收成细线，靠近即展开。点击顶部图钉可固定展开。托盘图标左键显示/隐藏，右键可打开设置或退出。双屏环境下可在「设置 → 显示器」里指定某一块屏幕，避免面板落在屏幕交界处。
 
-侧栏收起或隐藏 5 秒后会释放 WebView，以降低空闲常驻内存；原生边缘和后台配置仍然保留。本机发布版收起状态测得约 38.7MiB（包含所有子进程）。再次展开需重载界面，空闲复测约 1 秒，速度取决于 WebView2/WebKit 与机器负载。固定展开时不会释放界面，仍占用数百 MiB。
+界面支持**简体中文与英文**：「设置 → 界面语言」切换，选择会写入 `config.json`，原生托盘菜单也会同步切换语言。
 
-当前为 **0.1.0 预览版**。Windows 已在本地编译和验证，macOS 适配与 Intel/Apple Silicon 构建流程已提供，但尚未经 Mac 实机验收，也尚未上传 GitHub Releases。未签名安装包可能显示系统发布者提示。
+Windows 上，侧栏收起或隐藏 5 秒后会释放 WebView，以降低空闲常驻内存；原生边缘和后台配置仍然保留。本机发布版收起状态测得约 38.7MiB（包含所有子进程）。再次展开需重载界面，空闲复测约 1 秒。**macOS 上不释放 WebView**：WKWebView 子视图关闭后无法可靠重新挂载，曾导致再次展开时面板空白，因此 Mac 版保持界面常驻，空闲内存占用高于 Windows。
+
+当前为 **0.1.0 预览版**，已在 Apple Silicon Mac 实机完成编译、打包与界面验证，并发布到 GitHub Releases。未签名安装包可能显示系统发布者提示。
 
 ## 已有功能
 
@@ -32,6 +41,7 @@
 - 搜索、可设置的全局热键、固定当前资源管理器目录、前 9 项直达。
 - 托盘、可选开机自启、单实例、有限次数崩溃恢复。
 - 原子保存 JSON、损坏配置备份、导入导出、系统明暗主题。
+- 中英文双语界面与托盘菜单，语言设置随配置一起保存。
 
 默认快捷键：
 
@@ -83,9 +93,9 @@ Windows 原生集成测试会创建临时目录并打开、最小化、还原和
 cargo test --manifest-path src-tauri/Cargo.toml explorer_lifecycle -- --ignored --nocapture --test-threads=1
 ```
 
-构建 Windows 安装包：`npm run bundle -- --bundles nsis`。产物位于 `src-tauri/target/release/bundle/nsis/`；可执行文件为 `src-tauri/target/release/berth.exe`。macOS 使用 `npm run bundle -- --target aarch64-apple-darwin` 或 `--target x86_64-apple-darwin`。
+构建 Windows 安装包：`npm run bundle -- --bundles nsis`。产物位于 `src-tauri/target/release/bundle/nsis/`；可执行文件为 `src-tauri/target/release/berth.exe`。macOS 使用 `npm run bundle -- --bundles app` 生成 `.app`；Tauri 自带的 `bundle_dmg.sh` 在部分 macOS 版本上解析临时磁盘设备名会失败，本版 DMG 改用 `hdiutil create -format UDZO` 从暂存目录手工生成。
 
-推送 `v*` 标签时，GitHub Actions 构建 Windows NSIS/免安装 ZIP 以及两个 Mac 架构的 DMG，上传到**草稿预发布**供检查；不会直接公开正式发布。
+正式版本由本机编译验证后发布到 GitHub Releases。`.github/workflows/release.yml` 现在只在**手动触发**时运行，避免推送 `v0.1.0` 这类版本标签时 CI 再生成一个冲突的草稿预发布。
 
 ## 已知边界
 

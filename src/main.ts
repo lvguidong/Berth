@@ -1,6 +1,7 @@
 import "./style.css";
 import { call, native } from "./api";
 import { icon } from "./icons";
+import { language, localize, setLanguage, t, tr } from "./i18n";
 import {
   addPin,
   escapeHtml as e,
@@ -13,7 +14,9 @@ import type { Config, Pin, Snapshot, View } from "./types";
 
 const root = document.querySelector<HTMLDivElement>("#app")!;
 document.body.classList.toggle("native", native);
+document.documentElement.lang = language() === "en" ? "en" : "zh-CN";
 root.innerHTML = `<main class="app">${!native ? '<div class="preview-banner">桌面界面预览 · 不执行系统操作</div>' : ""}<header class="top" data-tauri-drag-region><div class="brand-icon">${icon("anchor")}</div><div class="brand" data-tauri-drag-region><strong data-tauri-drag-region>泊岸</strong><small data-tauri-drag-region>BERTH / YOUR FOLDERS</small></div><button class="icon-button" id="keep" aria-label="固定展开" title="固定展开">${icon("pin")}</button><button class="icon-button" id="settings" aria-label="设置" title="设置">${icon("settings")}</button></header><label class="search">${icon("search")}<input id="search" aria-label="搜索文件夹" placeholder="找一个文件夹…" autocomplete="off"><kbd>/</kbd></label><div class="notice" id="warning" role="status"></div><nav class="tabs" aria-label="文件夹列表"><button class="tab active" data-tab="pins">已固定 <span class="count" id="pin-count">0</span></button><button class="tab" data-tab="windows">已打开 <span class="count" id="window-count">0</span></button></nav><section class="list" id="list" aria-label="文件夹"></section><footer class="footer"><button class="add-button" id="add">${icon("plus")} 固定文件夹</button><div class="footnote"><span><i class="tiny-dot"></i> 每个目录，都有停靠的位置</span><button id="undo" class="icon-button" aria-label="撤销" title="撤销 Ctrl+Z" disabled>${icon("undo")}</button></div></footer></main><div class="drop-overlay">松开，让文件夹停靠在这里</div><dialog id="dialog"></dialog><div class="toast" role="status" aria-live="polite"></div>`;
+localize(root);
 const $ = <T extends HTMLElement = HTMLElement>(selector: string) =>
   document.querySelector<T>(selector)!;
 const dialog = $<HTMLDialogElement>("#dialog");
@@ -24,8 +27,8 @@ let windowFilter: string | null = null;
 let queue = Promise.resolve();
 let toastTimer: ReturnType<typeof setTimeout>;
 function toast(message: unknown) {
-  $(".toast").textContent = String(
-    message instanceof Error ? message.message : message,
+  $(".toast").textContent = tr(
+    String(message instanceof Error ? message.message : message),
   );
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => ($(".toast").textContent = ""), 5000);
@@ -33,6 +36,12 @@ function toast(message: unknown) {
 function accept(next: View) {
   if (!view || next.revision >= view.revision) {
     view = next;
+    const wanted = next.config.language === "en" ? "en" : "zh";
+    if (wanted !== language()) {
+      setLanguage(wanted);
+      location.reload();
+      return;
+    }
     if (native)
       document.documentElement.classList.toggle("collapsed", !!next.collapsed);
     render();
@@ -66,9 +75,9 @@ function render() {
   $("#keep").classList.toggle("active", view.config.panel.pinned);
   $("#keep").setAttribute("aria-pressed", String(view.config.panel.pinned));
   $<HTMLButtonElement>("#undo").disabled = !view.canUndo;
-  $("#warning").textContent = [view.warning, view.snapshot.warning]
-    .filter(Boolean)
-    .join("\n");
+  $("#warning").textContent = tr(
+    [view.warning, view.snapshot.warning].filter(Boolean).join("\n"),
+  );
   $(".app").style.opacity = String(view.config.panel.opacity);
   document
     .querySelectorAll<HTMLElement>("[data-tab]")
@@ -80,7 +89,8 @@ function render() {
         (!windowFilter || pathKey(w.path) === windowFilter) &&
         matches(query, w.title, w.path),
     );
-    list.innerHTML = `<div class="toolbar">${windowFilter ? '<button class="button" data-clear-filter>全部窗口</button>' : "<span></span>"}<button class="button" data-merge ${windows.length < 2 ? "disabled" : ""}>合并重复窗口</button></div>${windows.map((w) => `<article class="pin-row" title="${e(w.path)}"><button class="open-pin" data-window="${e(w.id)}"><span class="folder-icon">${icon("window")}</span><span class="pin-info"><span class="pin-name">${e(w.title || folderName(w.path))}</span><span class="pin-path">${w.minimized ? "已最小化 · " : ""}${e(w.path)}</span></span></button><button class="icon-button" data-pin-window="${e(w.id)}" title="固定此目录" aria-label="固定 ${e(w.title)}">${icon(view.config.pins.some((p) => pathKey(p.path) === pathKey(w.path)) ? "check" : "plus")}</button></article>`).join("")}${!windows.length ? `<div class="empty"><div class="empty-art">${icon("window")}</div><h2>${query ? "没有匹配的窗口" : "此刻，桌面很清静"}</h2><p>打开的文件夹会出现在这里<br>随时切换，也可以一键固定</p></div>` : ""}`;
+    list.innerHTML = `<div class="toolbar">${windowFilter ? '<button class="button" data-clear-filter>全部窗口</button>' : "<span></span>"}<button class="button" data-merge ${windows.length < 2 ? "disabled" : ""}>合并重复窗口</button></div>${windows.map((w) => `<article class="pin-row" title="${e(w.path)}"><button class="open-pin" data-window="${e(w.id)}"><span class="folder-icon">${icon("window")}</span><span class="pin-info"><span class="pin-name">${e(w.title || folderName(w.path))}</span><span class="pin-path">${w.minimized ? "已最小化 · " : ""}${e(w.path)}</span></span></button><button class="icon-button" data-pin-window="${e(w.id)}" title="固定此目录" aria-label="固定 ${e(w.title)}">${icon(view.config.pins.some((p) => pathKey(p.path) === pathKey(w.path)) ? "check" : "plus")}</button></article>`).join("")}${!windows.length ? `<div class="empty"><div class="empty-art">${icon("window")}</div><h2>${query ? "没有匹配的窗口" : "此刻，桌面很清静"}</h2><p>打开的文件夹会出现在这里<br>随时切换，也可以一键固定</p></div>`       : ""}`;
+    localize(list);
     return;
   }
   const pins = view.config.pins.filter((p) =>
@@ -93,6 +103,7 @@ function render() {
   );
   if (!view.config.pins.length && !view.config.groups.length) {
     list.innerHTML = `<div class="empty"><div class="empty-art">${icon("folder")}</div><h2>把文件夹拖到这里</h2><p>为常用目录留一个位置<br>下次，一点就到</p></div><div class="section-head"><span style="flex:1">也可以从下方添加</span><button class="icon-button" data-add-group title="新建分组" aria-label="新建分组">${icon("plus")}</button></div>`;
+    localize(list);
     return;
   }
   const section = (id: string | null, name: string, collapsed = false) => {
@@ -106,10 +117,12 @@ function render() {
     (!pins.length && query
       ? '<div class="empty"><h2>没有找到这个文件夹</h2><p>试试目录名、别名或路径中的关键词</p></div>'
       : "");
+  localize(list);
 }
 function modal(title: string, body: string) {
   if (dialog.open) dialog.close();
   dialog.innerHTML = `<div class="dialog-head"><h2>${e(title)}</h2><button class="icon-button" data-close aria-label="关闭">${icon("close")}</button></div><div class="dialog-body">${body}<div class="error" role="alert"></div></div>`;
+  localize(dialog);
   dialog.showModal();
   void call("set_interacting", { value: true });
 }
@@ -127,8 +140,8 @@ async function dialogTask(task: () => Promise<void>, close = true) {
     await task();
     if (close) dialog.close();
   } catch (error) {
-    dialog.querySelector(".error")!.textContent = String(
-      error instanceof Error ? error.message : error,
+    dialog.querySelector(".error")!.textContent = tr(
+      String(error instanceof Error ? error.message : error),
     );
   } finally {
     if (button) button.disabled = false;
@@ -143,7 +156,7 @@ async function browse(): Promise<string | null> {
   return (await open({
     directory: true,
     multiple: false,
-    title: "选择要固定的文件夹",
+    title: t("选择要固定的文件夹", "Choose a folder to pin"),
   })) as string | null;
 }
 async function pinPaths(paths: string[]) {
@@ -272,13 +285,14 @@ function settingsDialog() {
   const c = view.config;
   modal(
     "让泊岸适合你",
-    `<form id="settings-form"><div class="section-title">面板</div><label class="field"><span>显示方式</span><select name="mode"><option value="sidebar" ${c.panel.mode === "sidebar" ? "selected" : ""}>贴边侧栏</option><option value="float" ${c.panel.mode === "float" ? "selected" : ""}>悬浮小窗</option><option value="popup" ${c.panel.mode === "popup" ? "selected" : ""}>热键弹出</option></select></label><label class="field"><span>显示器</span><select name="monitor"><option value="">跟随当前屏幕</option></select></label><label class="field"><span>侧栏位置</span><select name="edge"><option value="left" ${c.panel.edge === "left" ? "selected" : ""}>屏幕左侧</option><option value="right" ${c.panel.edge === "right" ? "selected" : ""}>屏幕右侧</option></select></label><label class="check-field">保持置顶<input type="checkbox" name="top" ${c.panel.alwaysOnTop ? "checked" : ""}></label><label class="check-field">全屏时自动隐藏<input type="checkbox" name="fullscreen" ${c.panel.hideFullscreen ? "checked" : ""}></label><label class="field"><span>面板透明度</span><input name="opacity" type="range" min="0.5" max="1" step="0.05" value="${c.panel.opacity}"></label><div class="section-title">启动与快捷键</div><label class="check-field">登录电脑时启动<input type="checkbox" name="autostart" ${c.autostart ? "checked" : ""}></label><label class="field"><span>显示 / 隐藏面板 · 留空关闭</span><input name="toggle" value="${e(c.hotkeys.toggle)}" placeholder="Ctrl+Alt+Space"></label><label class="field"><span>固定当前文件夹 · 留空关闭</span><input name="capture" value="${e(c.hotkeys.capture)}" placeholder="Ctrl+Alt+P"></label><label class="check-field">前 9 项直达 · Ctrl+Alt+1~9<input type="checkbox" name="direct" ${c.hotkeys.direct ? "checked" : ""}></label><div class="actions"><button type="submit" class="button primary">保存设置</button></div><div class="section-title">你的数据，只留在这里</div><p class="settings-note">${e(view.configPath)}</p><div class="actions"><button type="button" class="button" id="import">导入配置</button><button type="button" class="button" id="export">导出配置</button></div><p>泊岸 0.1.0 · 离线运行，不收集使用数据。<br>关闭面板后，可从托盘或快捷键再次呼出。</p><button type="button" class="button" id="hide">收起到托盘</button></form>`,
+    `<form id="settings-form"><div class="section-title">面板</div><label class="field"><span>界面语言</span><select name="language"><option value="zh" ${c.language === "en" ? "" : "selected"}>简体中文</option><option value="en" ${c.language === "en" ? "selected" : ""}>English</option></select></label><label class="field"><span>显示方式</span><select name="mode"><option value="sidebar" ${c.panel.mode === "sidebar" ? "selected" : ""}>贴边侧栏</option><option value="float" ${c.panel.mode === "float" ? "selected" : ""}>悬浮小窗</option><option value="popup" ${c.panel.mode === "popup" ? "selected" : ""}>热键弹出</option></select></label><label class="field"><span>显示器</span><select name="monitor"><option value="">跟随当前屏幕</option></select></label><label class="field"><span>侧栏位置</span><select name="edge"><option value="left" ${c.panel.edge === "left" ? "selected" : ""}>屏幕左侧</option><option value="right" ${c.panel.edge === "right" ? "selected" : ""}>屏幕右侧</option></select></label><label class="check-field">保持置顶<input type="checkbox" name="top" ${c.panel.alwaysOnTop ? "checked" : ""}></label><label class="check-field">全屏时自动隐藏<input type="checkbox" name="fullscreen" ${c.panel.hideFullscreen ? "checked" : ""}></label><label class="field"><span>面板透明度</span><input name="opacity" type="range" min="0.5" max="1" step="0.05" value="${c.panel.opacity}"></label><div class="section-title">启动与快捷键</div><label class="check-field">登录电脑时启动<input type="checkbox" name="autostart" ${c.autostart ? "checked" : ""}></label><label class="field"><span>显示 / 隐藏面板 · 留空关闭</span><input name="toggle" value="${e(c.hotkeys.toggle)}" placeholder="Ctrl+Alt+Space"></label><label class="field"><span>固定当前文件夹 · 留空关闭</span><input name="capture" value="${e(c.hotkeys.capture)}" placeholder="Ctrl+Alt+P"></label><label class="check-field">前 9 项直达 · Ctrl+Alt+1~9<input type="checkbox" name="direct" ${c.hotkeys.direct ? "checked" : ""}></label><div class="actions"><button type="submit" class="button primary">保存设置</button></div><div class="section-title">你的数据，只留在这里</div><p class="settings-note">${e(view.configPath)}</p><div class="actions"><button type="button" class="button" id="import">导入配置</button><button type="button" class="button" id="export">导出配置</button></div><p>泊岸 0.1.0 · 离线运行，不收集使用数据。<br>关闭面板后，可从托盘或快捷键再次呼出。</p><button type="button" class="button" id="hide">收起到托盘</button></form>`,
   );
   $<HTMLFormElement>("#settings-form").onsubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget as HTMLFormElement);
     void dialogTask(() =>
       mutate((c) => {
+        c.language = String(data.get("language")) === "en" ? "en" : "zh";
         c.panel.mode = String(data.get("mode")) as Config["panel"]["mode"];
         c.panel.edge = String(data.get("edge")) as "left" | "right";
         c.panel.monitor = String(data.get("monitor")) || null;
@@ -304,6 +318,7 @@ function settingsDialog() {
               .map((name) => `<option value="${e(name)}">${e(name)}</option>`)
               .join("");
           select.value = c.panel.monitor || "";
+          localize(select);
         }
       })
       .catch(toast);
@@ -346,8 +361,9 @@ async function openPin(id: string, force = false) {
   if (!pin) return;
   if (view.snapshot.available[id] === false) {
     editDialog(id);
-    dialog.querySelector(".error")!.textContent =
-      "路径不可用，请重新定位或取消固定。";
+    dialog.querySelector(".error")!.textContent = tr(
+      "路径不可用，请重新定位或取消固定。",
+    );
     return;
   }
   const row = document.querySelector<HTMLElement>(
@@ -566,5 +582,5 @@ async function drainIntents() {
 }
 void start().catch((error) => {
   toast(error);
-  $("#warning").textContent = "启动失败，请从托盘退出后重新打开。";
+  $("#warning").textContent = tr("启动失败，请从托盘退出后重新打开。");
 });

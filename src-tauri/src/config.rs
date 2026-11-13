@@ -73,6 +73,8 @@ impl Default for Hotkeys {
 #[serde(default)]
 pub struct Config {
     pub version: u32,
+    /// UI language: "zh" (Simplified Chinese) or "en" (English).
+    pub language: String,
     pub panel: Panel,
     pub autostart: bool,
     pub hotkeys: Hotkeys,
@@ -83,6 +85,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             version: 1,
+            language: "zh".into(),
             panel: Panel::default(),
             autostart: false,
             hotkeys: Hotkeys::default(),
@@ -96,6 +99,9 @@ impl Config {
     pub fn validate(&mut self) -> Result<(), String> {
         if self.version != 1 {
             return Err("不支持此配置版本".into());
+        }
+        if self.language != "en" {
+            self.language = "zh".into();
         }
         if !["sidebar", "float", "popup"].contains(&self.panel.mode.as_str())
             || !["left", "right"].contains(&self.panel.edge.as_str())

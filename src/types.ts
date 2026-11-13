@@ -13,6 +13,7 @@ export interface Group {
 }
 export interface Config {
   version: number;
+  language: "zh" | "en";
   panel: {
     mode: "sidebar" | "float" | "popup";
     edge: "left" | "right";
@@ -53,6 +54,7 @@ export interface View {
 }
 export const defaultConfig = (): Config => ({
   version: 1,
+  language: "zh",
   panel: {
     mode: "sidebar",
     edge: "right",

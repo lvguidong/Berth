@@ -11,7 +11,7 @@ use std::{
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
-        Arc, Mutex,
+        Arc, Mutex, OnceLock,
     },
     time::Duration,
 };
@@ -29,6 +29,34 @@ pub struct Data {
     undo: Vec<Config>,
     warning: Option<String>,
 }
+/// Native tray menu items, kept so their labels can follow the UI language.
+struct TrayItems {
+    show: MenuItem<tauri::Wry>,
+    settings: MenuItem<tauri::Wry>,
+    quit: MenuItem<tauri::Wry>,
+}
+static TRAY_ITEMS: OnceLock<TrayItems> = OnceLock::new();
+
+fn tray_labels(language: &str) -> (&'static str, &'static str, &'static str, &'static str) {
+    if language == "en" {
+        ("Show / Hide Berth", "Settings", "Quit Berth", "Berth")
+    } else {
+        ("显示 / 隐藏泊岸", "设置", "退出泊岸", "泊岸 · Berth")
+    }
+}
+
+fn apply_tray_language(app: &AppHandle, language: &str) {
+    let (show, settings, quit, tooltip) = tray_labels(language);
+    if let Some(items) = TRAY_ITEMS.get() {
+        let _ = items.show.set_text(show);
+        let _ = items.settings.set_text(settings);
+        let _ = items.quit.set_text(quit);
+    }
+    if let Some(tray) = app.tray_by_id("main") {
+        let _ = tray.set_tooltip(Some(tooltip));
+    }
+}
+
 pub struct AppState {
     pub data: Mutex<Data>,
     pub service: Service,
@@ -215,6 +243,8 @@ fn commit(app: &AppHandle, state: &AppState, next: Config, remember: bool) -> Re
         return Err(format!("保存失败，修改未生效：{e}"));
     }
     let changed_panel = old.panel != next.panel;
+    let language_changed = old.language != next.language;
+    let next_language = next.language.clone();
     {
         let mut d = state.data.lock().unwrap();
         if remember {
@@ -228,6 +258,9 @@ fn commit(app: &AppHandle, state: &AppState, next: Config, remember: bool) -> Re
     }
     if changed_panel {
         panel::reveal(app, false);
+    }
+    if language_changed {
+        apply_tray_language(app, &next_language);
     }
     let result = view(state);
     let _ = app.emit("config-changed", &result);
@@ -439,13 +472,21 @@ pub fn run() {
             if let Err(e) = bind_hotkeys(app.handle(), &config.hotkeys) {
                 app.state::<AppState>().data.lock().unwrap().warning = Some(e);
             }
-            let show = MenuItem::with_id(app, "show", "显示 / 隐藏泊岸", true, None::<&str>)?;
-            let settings = MenuItem::with_id(app, "settings", "设置", true, None::<&str>)?;
-            let quit = MenuItem::with_id(app, "quit", "退出泊岸", true, None::<&str>)?;
+            let (show_label, settings_label, quit_label, tooltip) =
+                tray_labels(&config.language);
+            let show = MenuItem::with_id(app, "show", show_label, true, None::<&str>)?;
+            let settings =
+                MenuItem::with_id(app, "settings", settings_label, true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
+            let _ = TRAY_ITEMS.set(TrayItems {
+                show: show.clone(),
+                settings: settings.clone(),
+                quit: quit.clone(),
+            });
             let menu = Menu::with_items(app, &[&show, &settings, &quit])?;
-            TrayIconBuilder::new()
+            TrayIconBuilder::with_id("main")
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("泊岸 · Berth")
+                .tooltip(tooltip)
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
