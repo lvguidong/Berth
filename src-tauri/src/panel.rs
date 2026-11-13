@@ -31,6 +31,13 @@ fn ensure_ui(app: &AppHandle) {
         state.rendering.store(false, Ordering::SeqCst);
     });
 }
+// On macOS a child WKWebView cannot be reliably re-attached after close():
+// the native window survives but its content stays blank. Keep the WebView
+// alive there; the idle memory recycle remains enabled on Windows.
+#[cfg(target_os = "macos")]
+fn release_ui(_app: &AppHandle) {}
+
+#[cfg(not(target_os = "macos"))]
 fn release_ui(app: &AppHandle) {
     let state = app.state::<AppState>();
     if state.interacting.load(Ordering::SeqCst) || state.rendering.load(Ordering::SeqCst) {
