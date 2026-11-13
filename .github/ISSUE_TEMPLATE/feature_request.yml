@@ -1,0 +1,8 @@
+name: 功能建议 / Feature request
+description: 描述希望解决的使用场景
+body:
+  - type: textarea
+    attributes:
+      label: 场景与期望 / Scenario and expected behavior
+    validations:
+      required: true

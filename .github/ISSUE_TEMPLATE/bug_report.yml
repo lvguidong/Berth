@@ -1,0 +1,19 @@
+name: 缺陷反馈 / Bug report
+description: 帮助泊岸变得更稳定
+body:
+  - type: textarea
+    attributes:
+      label: 发生了什么 / What happened
+      description: 操作步骤、预期和实际结果。请隐去私人文件夹路径。
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: 系统与版本 / OS and version
+      placeholder: Windows 11 / macOS 14，泊岸 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 窗口状态 / Window details
+      description: 是否最小化、多标签页、网络路径、多显示器或不同虚拟桌面？

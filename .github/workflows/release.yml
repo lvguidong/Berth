@@ -1,0 +1,68 @@
+name: Release packages
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: --bundles nsis
+            target: x86_64-pc-windows-msvc
+          - os: macos-15
+            args: --target aarch64-apple-darwin
+            target: aarch64-apple-darwin
+          - os: macos-15
+            args: --target x86_64-apple-darwin
+            target: x86_64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npm test
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 泊岸 v__VERSION__
+          releaseBody: "See README and docs/TESTING.md for installation, permissions, and known limitations. Unsigned preview builds."
+          releaseDraft: true
+          prerelease: true
+          args: ${{ matrix.args }}
+      - name: Create Windows portable archive
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          Compress-Archive -LiteralPath src-tauri/target/release/berth.exe,README.md,README.en.md,LICENSE,docs -DestinationPath artifacts/Berth-windows-x64-portable.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Berth-${{ matrix.target }}
+          path: |
+            src-tauri/target/**/bundle/**/*.exe
+            src-tauri/target/**/bundle/**/*.dmg
+            artifacts/*.zip
+      - name: Attach portable archive to draft release
+        if: runner.os == 'Windows'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          gh release upload "v$version" artifacts/Berth-windows-x64-portable.zip --clobber

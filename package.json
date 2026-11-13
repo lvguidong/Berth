@@ -1,0 +1,30 @@
+{
+  "name": "berth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "tauri": "tauri",
+    "desktop": "tauri dev",
+    "bundle": "tauri build",
+    "format": "prettier --write src tests *.json *.ts",
+    "format:check": "prettier --check src tests *.json *.ts"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "@tauri-apps/cli": "^2.0.0",
+    "prettier": "^3.10.1",
+    "typescript": "~5.9.3",
+    "vite": "^6.4.0",
+    "vitest": "^5.1.0"
+  },
+  "license": "MIT"
+}
